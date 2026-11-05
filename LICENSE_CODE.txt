@@ -1,0 +1,3 @@
+Código original del proyecto AEROLIFE, preparado para fines académicos del equipo DAS172 de Universidad Don Bosco (2026).
+
+Se permite su uso, estudio y modificación para la evaluación y reproducción de esta entrega con atribución al equipo. La autoría de los datos NASA y la identidad gráfica de Universidad Don Bosco se rigen por sus condiciones respectivas; este texto no les aplica una licencia nueva ni implica aval institucional.

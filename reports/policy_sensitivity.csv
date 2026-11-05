@@ -1,0 +1,4 @@
+horizon,tp,fp,fn,tn,recall,precision,illustrative_cost_units
+15,10,90,0,0,1.0,0.1,90
+30,25,75,0,0,1.0,0.25,75
+45,28,72,0,0,1.0,0.28,72

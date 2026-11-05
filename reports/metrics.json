@@ -1,0 +1,59 @@
+{
+  "official_test": {
+    "rmse": 17.186491211461938,
+    "mae": 12.327624914861488,
+    "r2": 0.8289532225469378,
+    "bias": -0.4977995023836874,
+    "nasa_score": 491.7273338976054,
+    "n": 100,
+    "rmse_ci95_engine_bootstrap": [
+      14.349367490337903,
+      19.803221910483906
+    ],
+    "interval_coverage90": 1.0,
+    "mean_interval_width": 172.75541922117117,
+    "conformal_radius": 101.73738809834374
+  },
+  "secondary_capped_target": {
+    "rmse": 15.86802581529153,
+    "mae": 11.257624914861488,
+    "r2": 0.8432035997523093,
+    "bias": 0.5722004976163126,
+    "nasa_score": 441.3919877422579,
+    "n": 100
+  },
+  "calibration": {
+    "rmse": 52.04059277398233,
+    "mae": 30.661382747502678,
+    "r2": 0.5073671378821787,
+    "bias": -16.36263965107014,
+    "nasa_score": 401976.16602664045,
+    "n": 20,
+    "n_engines": 20,
+    "snapshot_protocol": "uniform eligible observed cycle >=30, one per engine, seed43"
+  },
+  "selected_model": "RandomForest_leaf3",
+  "cv_mean_rmse": 31.835537639978032,
+  "cv_sd_rmse": 10.035261541641308,
+  "eda": {
+    "development_rows": 16390,
+    "development_engines": 80,
+    "lifetime_min": 128,
+    "lifetime_median": 199.0,
+    "lifetime_max": 341,
+    "constant_raw_channels": [
+      "s1",
+      "s5",
+      "s10",
+      "s16",
+      "s18",
+      "s19",
+      "setting_3"
+    ],
+    "statistical_outlier_cells_3iqr": 1194,
+    "outliers_removed": 0
+  },
+  "execution_seconds": 591.6585272529996,
+  "python_version": "3.12.14",
+  "model_sha256": "3c94e238ba26c4161ac08c89dcf52f499195fe9655c125b2bd24981aa0adc0c9"
+}

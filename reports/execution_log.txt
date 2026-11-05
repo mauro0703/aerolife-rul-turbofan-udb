@@ -1,0 +1,24 @@
+CV fold 1/5 completo
+CV fold 2/5 completo
+CV fold 3/5 completo
+CV fold 4/5 completo
+CV fold 5/5 completo
+Modelo seleccionado por CV: RandomForest_leaf3
+{
+  "selected": "RandomForest_leaf3",
+  "official_test": {
+    "rmse": 17.186491211461938,
+    "mae": 12.327624914861488,
+    "r2": 0.8289532225469378,
+    "bias": -0.49779950238368775,
+    "nasa_score": 491.7273338976053,
+    "n": 100,
+    "rmse_ci95_engine_bootstrap": [
+      14.349367490337903,
+      19.80322191048391
+    ],
+    "interval_coverage90": 1.0,
+    "mean_interval_width": 172.75541922117117,
+    "conformal_radius": 101.73738809834374
+  }
+}

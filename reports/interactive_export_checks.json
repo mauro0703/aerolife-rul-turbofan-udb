@@ -1,0 +1,16 @@
+{
+  "method": "Node VM with DOM and Plotly contract mocks; no browser renderer",
+  "passed": true,
+  "checks": [
+    "100 engines and 8 engineering channels",
+    "embedded predictions match official CSV",
+    "RMSE recomputed",
+    "default decision boundaries",
+    "engine/cycle replay only shows past",
+    "sensor units",
+    "empty status filter",
+    "scenario changes",
+    "CSV export handler"
+  ],
+  "rmse_recomputed": 17.186491101952864
+}
