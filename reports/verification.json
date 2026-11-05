@@ -6,7 +6,6 @@
   "repeat_tolerance": 1e-10,
   "pytest": "15 passed",
   "pdf_pages": 9,
-  "reference_cover_all_six_members_preserved": true,
   "model_frozen_before_official_labels": true,
   "model_sha256": "3c94e238ba26c4161ac08c89dcf52f499195fe9655c125b2bd24981aa0adc0c9",
   "streamlit_verification": "official AppTest: load, engine, past cycle, horizon and status filter; passed",
@@ -28,7 +27,7 @@
     "conformal_radius": 101.73738809834374
   },
   "limitations": "Synthetic HPC-only FD001; 100% empirical coverage has a wide mean interval of 172.76 cycles. No proven AOG benefit.",
-  "pdf_sha256": "1da5edd5fd057d47699da0e9be054e3638e2cb8b07a9d4848a400355aa7ab262",
+  "pdf_sha256": "6bdfbb647116ef53efddcf1a833e5c3b8816a7ebf0c65f1656b9b4be65a79bfc",
   "dashboard_verification": {
     "browser": "Chrome en servidor de vista previa",
     "checks": [
@@ -39,5 +38,6 @@
       "integridad del ZIP y coincidencia con los archivos del panel publicado"
     ],
     "portable_zip_bytes": 471963
-  }
+  },
+  "pdf_cover_author_count": 7
 }
