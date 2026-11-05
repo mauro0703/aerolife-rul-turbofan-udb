@@ -57,14 +57,12 @@ pyarrow==26.0.1
 pycparser==3.12 ; implementation_name == 'pypy'
 pydeck==0.9.3
 pygments==2.21.0
-pymupdf==1.26.6
 pyparsing==3.3.2
 pytest==9.2.0
 python-dateutil==4.0.0
 python-multipart==0.0.33
 pyzmq==27.3.0
 referencing==0.37.0
-reportlab==4.4.9
 requests==2.34.2
 rpds-py==2026.9.1
 scikit-learn==1.8.0

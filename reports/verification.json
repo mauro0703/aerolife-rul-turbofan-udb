@@ -5,27 +5,10 @@
   "independent_repeat_metrics_match": true,
   "repeat_tolerance": 1e-10,
   "pytest": "15 passed",
-  "pdf_pages": 10,
+  "pdf_pages": 9,
   "reference_cover_all_six_members_preserved": true,
   "model_frozen_before_official_labels": true,
   "model_sha256": "3c94e238ba26c4161ac08c89dcf52f499195fe9655c125b2bd24981aa0adc0c9",
-  "interactive_export_checks": {
-    "method": "Node VM with DOM and Plotly contract mocks; no browser renderer",
-    "passed": true,
-    "checks": [
-      "100 engines and 8 engineering channels",
-      "embedded predictions match official CSV",
-      "RMSE recomputed",
-      "default decision boundaries",
-      "engine/cycle replay only shows past",
-      "sensor units",
-      "empty status filter",
-      "scenario changes",
-      "CSV export handler"
-    ],
-    "rmse_recomputed": 17.186491101952864
-  },
-  "html_visual_browser_test": "not available; browser executable unavailable. JavaScript, data and controls checked with DOM/Plotly contract mocks.",
   "streamlit_verification": "official AppTest: load, engine, past cycle, horizon and status filter; passed",
   "portable_python_sources": true,
   "dependencies_pinned": "direct + runtime-matched universal lock, Python 3.12",
@@ -44,5 +27,17 @@
     "mean_interval_width": 172.75541922117117,
     "conformal_radius": 101.73738809834374
   },
-  "limitations": "Synthetic HPC-only FD001; 100% empirical coverage has a wide mean interval of 172.76 cycles. No proven AOG benefit."
+  "limitations": "Synthetic HPC-only FD001; 100% empirical coverage has a wide mean interval of 172.76 cycles. No proven AOG benefit.",
+  "pdf_sha256": "1da5edd5fd057d47699da0e9be054e3638e2cb8b07a9d4848a400355aa7ab262",
+  "dashboard_verification": {
+    "browser": "Chrome en servidor de vista previa",
+    "checks": [
+      "100 motores y escenarios de priorización",
+      "filtro de estado e historial por ciclo y sensor",
+      "métricas oficiales y ocho candidatos de validación cruzada",
+      "descarga CSV y comparación con el registro oficial",
+      "integridad del ZIP y coincidencia con los archivos del panel publicado"
+    ],
+    "portable_zip_bytes": 471963
+  }
 }

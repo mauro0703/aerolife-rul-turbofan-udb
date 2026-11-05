@@ -1,8 +1,0 @@
-Celda 1 ejecutada
-Celda 2 ejecutada
-Celda 3 ejecutada
-Celda 4 ejecutada
-Celda 5 ejecutada
-Celda 6 ejecutada
-Celda 7 ejecutada
-Notebook ejecutado sin celdas de error.

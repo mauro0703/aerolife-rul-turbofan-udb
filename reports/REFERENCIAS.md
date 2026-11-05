@@ -27,5 +27,3 @@ https://arxiv.org/abs/2107.07511
 [7] Streamlit. Documentación oficial de AppTest para verificación del tablero.
 
 https://docs.streamlit.io/develop/api-reference/app-testing/st.testing.v1.apptest
-
-La portada se adapta exclusivamente del PDF facilitado por el equipo. Los datos conservan atribución a NASA Ames PCoE. El código y la redacción del pipeline fueron creados para esta entrega.
