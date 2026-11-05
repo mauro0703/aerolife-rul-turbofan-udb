@@ -10,13 +10,13 @@ AEROLIFE estima los ciclos de vida útil remanente (RUL) a partir del historial 
 | --- | --- |
 | Informe técnico | [Reporte_Tecnico_RUL_Turbofan.pdf](reports/Reporte_Tecnico_RUL_Turbofan.pdf) |
 | Cuaderno de análisis | [pipeline_analitico.ipynb](notebooks/pipeline_analitico.ipynb) |
-| Panel interactivo | [Panel_Interactivo_AEROLIFE.zip](dashboard/Panel_Interactivo_AEROLIFE.zip) |
+| Panel interactivo | [Abrir en el navegador](https://mauro0703.github.io/aerolife-panel-fd001/) · [Descargar ZIP](https://mauro0703.github.io/aerolife-panel-fd001/Panel_Interactivo_AEROLIFE.zip) |
 
 ## Panel interactivo
 
 ![Vista de flota del panel AEROLIFE](dashboard/vista_previa.jpg)
 
-El ZIP ocupa menos de 0,5 MB. Para descargarlo desde GitHub, abrir la ficha del archivo y seleccionar el botón de descarga. Para consultar el panel sin instalación, extraer su contenido en una carpeta y abrir `index.html` en un navegador actualizado. Incluye la priorización de la flota, el historial de ocho canales por motor, la validación del modelo y la exportación de resultados a CSV. Los controles de horizonte, reserva e intervalo máximo de reevaluación permiten comparar escenarios de planificación.
+El ZIP ocupa menos de 0,5 MB. Para consultar el panel sin instalación, extraer su contenido en una carpeta y abrir `index.html` en un navegador actualizado. Incluye la priorización de la flota, el historial de ocho canales por motor, la validación del modelo y la exportación de resultados a CSV. Los controles de horizonte, reserva e intervalo máximo de reevaluación permiten comparar escenarios de planificación. [Copia del ZIP en el repositorio](dashboard/Panel_Interactivo_AEROLIFE.zip).
 
 ## Resultados del experimento
 
