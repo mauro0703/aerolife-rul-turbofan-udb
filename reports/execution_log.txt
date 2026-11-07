@@ -7,11 +7,11 @@ Modelo seleccionado por CV: RandomForest_leaf3
 {
   "selected": "RandomForest_leaf3",
   "official_test": {
-    "rmse": 17.186491211461938,
-    "mae": 12.327624914861488,
+    "rmse": 17.18649121146194,
+    "mae": 12.327624914861484,
     "r2": 0.8289532225469378,
-    "bias": -0.49779950238368775,
-    "nasa_score": 491.7273338976053,
+    "bias": -0.49779950238368725,
+    "nasa_score": 491.7273338976054,
     "n": 100,
     "rmse_ci95_engine_bootstrap": [
       14.349367490337903,

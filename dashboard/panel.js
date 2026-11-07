@@ -119,7 +119,7 @@ function fleet() {
   const filter = byId("status-filter").value;
   visibleFleet = dataset.official.map((row) => ({ ...row, ...decision(row.lower90, settings) }))
     .filter((row) => filter === "all" || row.status === filter)
-    .sort((a, b) => a.lower90 - b.lower90 || a.rul_pred - b.rul_pred);
+    .sort((a, b) => a.lower90 - b.lower90 || a.rul_pred - b.rul_pred || a.engine_id - b.engine_id);
   cards(byId("fleet-cards"), [
     { label: "Motores en vista", value: visibleFleet.length },
     ...Object.entries(states).map(([label, style]) => ({
@@ -138,18 +138,27 @@ function fleet() {
     const yTicks = Array.from({ length: upper / 50 + 1 }, (_, index) => index * 50);
     const { chart, x, y } = axes(target, [0, visibleFleet.length], [0, upper], xTicks, yTicks,
       "Motor de prueba, ordenado por límite inferior", "RUL [ciclos]", "RUL estimada y banda de incertidumbre de la flota");
+    chart.setAttribute("role", "group");
     const width = Math.min(32, (x(1) - x(0)) * 0.7);
     visibleFleet.forEach((row, index) => {
       const center = x(index + 0.5);
       const bar = svg(chart, "rect", {
         x: center - width / 2, y: y(row.rul_pred), width,
         height: Math.max(1, y(0) - y(row.rul_pred)), fill: states[row.status].color, class: "selectable",
+        tabindex: 0, role: "button", "aria-label": `Abrir historial del motor ${row.engine_id}`,
       });
       svg(bar, "title", {}, `Motor ${row.engine_id} · ${number(row.rul_pred)} ciclos · ${row.status}`);
-      bar.addEventListener("click", () => {
+      const openHistory = () => {
         byId("engine").value = row.engine_id;
         selectEngine();
         showPage("engine-history");
+      };
+      bar.addEventListener("click", openHistory);
+      bar.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openHistory();
+        }
       });
       svg(chart, "line", { x1: center, x2: center, y1: y(row.upper90), y2: y(row.lower90), stroke: "#203b50", "stroke-opacity": 0.52, "pointer-events": "none" });
     });
@@ -177,12 +186,13 @@ function engineHistory() {
   cards(byId("engine-cards"), [
     { label: "Motor", value: id, detail: `Ciclo ${end}` },
     { label: "RUL estimada", value: number(engine.p[index]), detail: "ciclos" },
-    { label: "Intervalo nominal", value: `${number(engine.l[index], 0)} – ${number(engine.u[index], 0)}`, detail: "ciclos" },
+    { label: "Intervalo nominal", value: `${number(engine.l[index])} – ${number(engine.u[index])}`, detail: "ciclos" },
     { label: "Reevaluar en", value: current.revisit, detail: "ciclos" },
   ]);
-  byId("engine-note").textContent = end < 30
-    ? `${current.status}. Los primeros 29 ciclos quedan fuera del protocolo de calibración.`
-    : current.status;
+  const minHistory = dataset.study.min_history;
+  byId("engine-note").textContent = end < minHistory
+    ? `${current.status}. Los ciclos menores a ${minHistory} quedan fuera del protocolo de calibración.`
+    : `${current.status}. La banda no garantiza cobertura simultánea de la trayectoria; los ciclos menores a ${minHistory} están fuera del protocolo de calibración.`;
   const cycles = engine.c.slice(0, end);
   const xStep = Math.max(1, Math.ceil(end / 5 / 5) * 5);
   const xTicks = [[1, "1"]];
@@ -227,6 +237,7 @@ function validation() {
     { label: "Cobertura empírica", value: `${number(metrics.interval_coverage90 * 100, 0)} %`, detail: "intervalo nominal del 90 %" },
   ]);
   byId("interval-note").textContent = `Ancho medio del intervalo ${number(metrics.mean_interval_width, 2)} ciclos. NASA score ${number(metrics.nasa_score, 2)}.`;
+  alertSummary();
   const maximum = Math.ceil(Math.max(...dataset.official.map((row) => Math.max(row.rul_true, row.rul_pred))) / 30) * 30;
   const ticks = Array.from({ length: maximum / 30 + 1 }, (_, index) => index * 30);
   const { chart, x, y } = axes(byId("test-chart"), [0, maximum], [0, maximum], ticks.map((tick) => [tick, tick]), ticks,
@@ -238,6 +249,19 @@ function validation() {
   }
   table(byId("cv-table"), ["Candidato", "RMSE medio", "Desviación entre particiones", "MAE medio"],
     dataset.comparison.map((row) => [row.candidate, number(row.cv_rmse, 2), number(row.cv_sd, 2), number(row.cv_mae, 2)]));
+}
+
+function alertSummary() {
+  const { horizon, buffer } = scenario();
+  let tp = 0, fp = 0, fn = 0;
+  for (const row of dataset.official) {
+    const urgent = row.rul_true <= horizon;
+    const alert = row.lower90 <= horizon + buffer;
+    if (urgent && alert) tp++;
+    else if (alert) fp++;
+    else if (urgent) fn++;
+  }
+  byId("alert-note").textContent = `Escenario H=${horizon}, B=${buffer}: ${tp + fp} alertas en los 100 motores; ${tp} verdaderos positivos, ${fp} falsos positivos y ${fn} falsos negativos. Urgencia de referencia: RUL real ≤ H. Alerta: límite inferior ≤ H + B.`;
 }
 
 function selectEngine() {
@@ -283,13 +307,14 @@ async function initialize() {
     button.addEventListener("click", () => showPage(button.dataset.page));
   });
   for (const name of Object.keys(defaults)) {
-    byId(name).addEventListener("input", () => { fleet(); engineHistory(); });
+    byId(name).addEventListener("input", () => { fleet(); engineHistory(); alertSummary(); });
     byId(name).addEventListener("change", () => { byId(name).value = scenario()[name]; });
   }
   fleet();
   selectEngine();
   validation();
   byId("dashboard").hidden = false;
+  byId("download-package").hidden = !["http:", "https:"].includes(location.protocol);
   byId("load-status").hidden = true;
 }
 

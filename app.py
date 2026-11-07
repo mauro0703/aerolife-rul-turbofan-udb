@@ -10,10 +10,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-sys.path.insert(0, str(Path("src")))
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT / "src"))
 from rul.data import COLUMNS, SENSORS, SYMBOLS, UNITS, read_raw
 from rul.inference import load_bundle, predict_history
 from rul.evaluation import inspection_policy
+from rul.artifacts import artifact_signature, validate_artifacts
 
 st.set_page_config(page_title="AEROLIFE | Turbofan RUL", page_icon="✈", layout="wide")
 st.markdown(
@@ -26,27 +28,28 @@ h1,h2,h3 {color:#12314b;} div[data-testid="stMetric"] {background:white;border:1
 
 
 @st.cache_resource
-def model():
-    return load_bundle()
+def model(signature):
+    return load_bundle(ROOT / "models/rul_predictor_model.pkl")
 
 
 @st.cache_data
-def artifacts():
+def artifacts(signature):
+    validate_artifacts(ROOT)
     return (
-        json.loads(Path("reports/metrics.json").read_text()),
-        pd.read_csv("reports/model_comparison.csv"),
-        pd.read_csv("reports/test_predictions.csv"),
-        pd.read_csv("reports/hypothesis_tests.csv"),
+        json.loads((ROOT / "reports/metrics.json").read_text()),
+        pd.read_csv(ROOT / "reports/model_comparison.csv"),
+        pd.read_csv(ROOT / "reports/test_predictions.csv"),
+        pd.read_csv(ROOT / "reports/hypothesis_tests.csv"),
     )
 
 
 @st.cache_data
-def test_history():
-    return predict_history(read_raw("data/raw/test_FD001.txt"), model())
+def test_history(signature):
+    return predict_history(read_raw(ROOT / "data/raw/test_FD001.txt"), model(signature))
 
 
 @st.cache_data
-def upload_history(payload):
+def upload_history(payload, signature):
     frame = pd.read_csv(io.BytesIO(payload))
     if len(frame) > 100000:
         raise ValueError("Máximo 100 000 registros por carga.")
@@ -55,7 +58,7 @@ def upload_history(payload):
             "El CSV debe contener exactamente engine_id, cycle, setting_1..3 y s1..s21."
         )
     frame = frame[COLUMNS].apply(pd.to_numeric, errors="raise")
-    return predict_history(frame, model())
+    return predict_history(frame, model(signature))
 
 
 st.caption("UNIVERSIDAD DON BOSCO  /  DAS172  /  PROGNÓSTICO AERONÁUTICO")
@@ -68,8 +71,9 @@ st.caption(
 )
 
 try:
-    bundle = model()
-    metrics, comparison, official, hypotheses = artifacts()
+    signature = artifact_signature(ROOT)
+    bundle = model(signature)
+    metrics, comparison, official, hypotheses = artifacts(signature)
 except (FileNotFoundError, ValueError) as error:
     st.error(f"No están completos los resultados: {error}")
     st.code("python scripts/run_pipeline.py")
@@ -85,19 +89,19 @@ with st.sidebar:
     source = st.radio(
         "Fuente", ["Flota NASA FD001", "CSV propio (formato FD001)"], key="source"
     )
-    st.caption(f"Modelo: {bundle['metadata']['winner']} · semilla 42")
+    st.caption(f"Modelo: {bundle['metadata']['winner']} · semilla {bundle['metadata']['config']['seed']}")
     st.caption(
         "Las decisiones cambian con los controles; el modelo permanece congelado."
     )
 
 try:
     if source == "Flota NASA FD001":
-        history, si, audit = test_history()
+        history, si, audit = test_history(signature)
     else:
         upload = st.file_uploader(
             "Historial en unidades nativas NASA", type="csv", max_upload_size=10
         )
-        template = read_raw("data/raw/test_FD001.txt").query("engine_id == 1")
+        template = read_raw(ROOT / "data/raw/test_FD001.txt").query("engine_id == 1")
         st.download_button(
             "Descargar CSV de ejemplo",
             template.to_csv(index=False),
@@ -109,12 +113,17 @@ try:
                 "Cargue un historial que empiece en el ciclo 1 y tenga ciclos consecutivos por motor."
             )
             st.stop()
-        history, si, audit = upload_history(upload.getvalue())
+        history, si, audit = upload_history(upload.getvalue(), signature)
 except (ValueError, TypeError, pd.errors.ParserError) as error:
     st.error(f"No se puede analizar este historial: {error}")
     st.stop()
 
 history = history.copy()
+if audit["missing_after_physics"]:
+    st.warning(
+        f"Se imputaron {audit['missing_after_physics']} celdas faltantes o físicamente inválidas "
+        "con medianas del entrenamiento. Revise la calidad de la telemetría."
+    )
 history["status"], history["revisit_cycles"] = inspection_policy(
     history.lower90, horizon, buffer, maximum
 )
@@ -156,7 +165,7 @@ with summary:
     if fleet.empty:
         st.info("No hay motores con el estado seleccionado.")
     else:
-        ranked = fleet.sort_values("lower90")
+        ranked = fleet.sort_values(["lower90", "rul_pred", "engine_id"])
         fig = px.bar(
             ranked,
             x="engine_id",
@@ -192,7 +201,19 @@ with summary:
             "short_history",
             "features_beyond_6sigma",
         ]
-        st.dataframe(ranked[columns].round(2), hide_index=True, width="stretch")
+        st.dataframe(
+            ranked[columns].round(2), hide_index=True, width="stretch",
+            column_config={
+                "engine_id": "Motor", "cycle": "Ciclo observado",
+                "rul_pred": "RUL estimada [ciclos]", "lower90": "Límite inferior 90%",
+                "upper90": "Límite superior 90%", "status": "Estado",
+                "revisit_cycles": "Reevaluar en [ciclos]", "short_history": "Historial corto",
+                "features_beyond_6sigma": st.column_config.NumberColumn(
+                    "Variables con |z| > 6",
+                    help="Conteo descriptivo en la escala del entrenamiento. Señala telemetría para revisar; no es una prueba formal de deriva ni un límite del fabricante.",
+                ),
+            },
+        )
         st.download_button(
             "Exportar flota filtrada",
             ranked[columns].to_csv(index=False),
@@ -219,7 +240,7 @@ with telemetry:
     d.metric("Reevaluar en ≤ [ciclos]", int(point.revisit_cycles))
     if point.short_history:
         st.info(
-            "Historial menor a 30 ciclos: el protocolo de calibración no respalda estos intervalos."
+            f"Historial menor a {bundle['metadata']['config']['min_history']} ciclos: el protocolo de calibración no respalda estos intervalos."
         )
     g = h[h.cycle <= selected]
     fig = go.Figure()
@@ -258,6 +279,10 @@ with telemetry:
         legend=dict(orientation="h", y=1.15),
     )
     st.plotly_chart(fig, width="stretch")
+    st.caption(
+        "La banda no garantiza cobertura simultánea de toda la trayectoria; "
+        f"los ciclos menores a {bundle['metadata']['config']['min_history']} son exploratorios."
+    )
     sensor = st.selectbox(
         "Canal de telemetría",
         SENSORS,
@@ -321,14 +346,22 @@ with evaluation:
     )
     fig.update_layout(template="plotly_white", height=360)
     st.plotly_chart(fig, width="stretch")
+    alert = official.lower90 <= horizon + buffer
+    urgent = official.rul_true <= horizon
+    tp = int((alert & urgent).sum())
+    fp = int((alert & ~urgent).sum())
+    fn = int((~alert & urgent).sum())
     st.info(
-        "El ancho medio de la banda limita la priorización: con los valores por defecto se alertan los 100 motores. Cobertura alta no equivale a precisión ni a utilidad operacional validada."
+        f"Anchura media: {m['mean_interval_width']:.2f} ciclos. En la prueba oficial, "
+        f"H={horizon} y B={buffer} generan {int(alert.sum())} alertas: "
+        f"{tp} verdaderos positivos, {fp} falsos positivos y {fn} falsos negativos. "
+        "La alta cobertura requiere una banda amplia y no demuestra utilidad operacional."
     )
     st.caption(
         "Estos resultados corresponden a la flota NASA original; no evalúan el CSV propio ni se recalculan con los filtros de planificación."
     )
     st.dataframe(
-        pd.read_csv("reports/metrics_by_horizon.csv").round(3),
+        pd.read_csv(ROOT / "reports/metrics_by_horizon.csv").round(3),
         hide_index=True,
         width="stretch",
     )
@@ -363,7 +396,7 @@ with method:
     st.markdown(
         "[Fuente de los datos: NASA Ames PCoE](https://www.nasa.gov/intelligent-systems-division/discovery-and-systems-health/pcoe/pcoe-data-set-repository/)"
     )
-    report = Path("reports/Reporte_Tecnico_RUL_Turbofan.pdf")
+    report = ROOT / "reports/Reporte_Tecnico_RUL_Turbofan.pdf"
     if report.exists():
         st.download_button(
             "Descargar reporte técnico",

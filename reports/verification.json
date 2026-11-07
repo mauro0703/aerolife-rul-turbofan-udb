@@ -1,43 +1,74 @@
 {
+  "review_date": "2026-11-07",
   "pipeline_executed": true,
   "notebook_all_code_cells_executed": 7,
   "notebook_execution_mode": "sequential IPython in-process; all code cells executed",
   "independent_repeat_metrics_match": true,
   "repeat_tolerance": 1e-10,
-  "pytest": "15 passed",
+  "independent_repeat_model_bytes_match": true,
+  "processed_csv_contents_match": true,
+  "pytest": "41 passed",
   "pdf_pages": 9,
+  "pdf_cover_author_count": 7,
   "model_frozen_before_official_labels": true,
   "model_sha256": "3c94e238ba26c4161ac08c89dcf52f499195fe9655c125b2bd24981aa0adc0c9",
-  "streamlit_verification": "official AppTest: load, engine, past cycle, horizon and status filter; passed",
+  "pdf_sha256": "3f3515b8282d718988b0cd4074941a43da0d4db2415d4fd911ef80455418fcdd",
+  "docx_sha256": "77769aadccb4c90459cd0a1fdbcedb52a8cd83fbbaec6a414994a7c860e29245",
+  "streamlit_verification": "AppTest: startup, filters including empty result, motor, past cycle, H=10 and H=45; passed",
   "portable_python_sources": true,
-  "dependencies_pinned": "direct + runtime-matched universal lock, Python 3.12",
+  "dependencies_pinned": "exact direct requirements and universal lock; freshly installed CPython 3.12",
+  "python_version": "3.12.14",
+  "installed_versions": {
+    "numpy": "2.5.4",
+    "pandas": "3.1.1",
+    "scikit-learn": "1.8.0",
+    "xgboost": "3.4.1",
+    "streamlit": "1.66.1",
+    "nbclient": "0.11.0"
+  },
   "official_test": {
-    "rmse": 17.186491211461938,
-    "mae": 12.327624914861488,
+    "rmse": 17.18649121146194,
+    "mae": 12.327624914861484,
     "r2": 0.8289532225469378,
-    "bias": -0.4977995023836874,
+    "bias": -0.49779950238368725,
     "nasa_score": 491.7273338976054,
     "n": 100,
     "rmse_ci95_engine_bootstrap": [
       14.349367490337903,
-      19.803221910483906
+      19.80322191048391
     ],
     "interval_coverage90": 1.0,
     "mean_interval_width": 172.75541922117117,
     "conformal_radius": 101.73738809834374
   },
-  "limitations": "Synthetic HPC-only FD001; 100% empirical coverage has a wide mean interval of 172.76 cycles. No proven AOG benefit.",
-  "pdf_sha256": "6bdfbb647116ef53efddcf1a833e5c3b8816a7ebf0c65f1656b9b4be65a79bfc",
   "dashboard_verification": {
-    "browser": "Chrome en servidor de vista previa",
-    "checks": [
-      "100 motores y escenarios de priorización",
-      "filtro de estado e historial por ciclo y sensor",
-      "métricas oficiales y ocho candidatos de validación cruzada",
-      "descarga CSV y comparación con el registro oficial",
-      "integridad del ZIP y coincidencia con los archivos del panel publicado"
+    "public_commit": "2cf9ae2c40ae90ab9dd899d123ff5e1fc8518f98",
+    "http_status": 200,
+    "published_html_matches_source": true,
+    "public_zip_download_matches_local_bytes": true,
+    "zip_members_match_dashboard_files": true,
+    "portable_zip_bytes": 473033,
+    "downloaded_csv_h10_follow_engine_ids": [
+      22,
+      69,
+      2,
+      85,
+      1
     ],
-    "portable_zip_bytes": 471963
+    "downloaded_csv_matches_official_predictions_and_revisit": true,
+    "browser_checks": [
+      "100 motors; 78 priority/22 plan at H=30 B=10",
+      "empty Seguimiento filter at H=30 and five motors at H=10",
+      "keyboard navigation from fleet bar to motor 1",
+      "historical first and last cycle; W32 sensor",
+      "official metrics remain fixed while scenario alerts change",
+      "motor 1 interval displayed as 22.8 to 226.3 cycles",
+      "content-versioned assets eliminate stale mixed browser resources",
+      "ZIP and CSV downloaded by clicking the actual UI controls"
+    ],
+    "offline_file_protocol_execution": "Not executed: validation browser permits HTTP/HTTPS only. Archive content and relative local assets verified."
   },
-  "pdf_cover_author_count": 7
+  "notebook_standard_kernel": "Bound to active interpreter; TCP startup blocked by local network restrictions. Full execution validated with --in-process.",
+  "limitations": "Synthetic HPC-only FD001. The 125-cycle forest target and q=101.74 constrain L<=23.26, so H=30 B=10 alerts every motor: 25 TP,75 FP,0 FN,0 TN. No proven AOG or monetary benefit.",
+  "fresh_data_download_checksum_match": true
 }

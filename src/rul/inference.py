@@ -1,6 +1,8 @@
 """Shared inference for Streamlit and batch use, without access to RUL labels."""
 
 from pathlib import Path
+import importlib.metadata
+import json
 import pickle
 import numpy as np
 import pandas as pd
@@ -8,14 +10,23 @@ from .data import validate_and_clean, to_engineering_units
 from .features import make_features
 from .modeling import predict_nonnegative
 from .evaluation import intervals, inspection_policy
+from .artifacts import validate_artifacts
 
 
 def load_bundle(path="models/rul_predictor_model.pkl"):
     """Load ONLY the trusted locally generated model; never accept uploaded pickle."""
+    path = Path(path)
+    validate_artifacts(path.resolve().parents[1])
+    metadata = json.loads(path.with_name("model_metadata.json").read_text(encoding="utf-8"))
+    for name in ("numpy", "scikit-learn"):
+        if importlib.metadata.version(name) != metadata["versions"][name]:
+            raise ValueError(f"Versión incompatible de {name}; instale requirements-lock.txt.")
     with Path(path).open("rb") as handle:
         bundle = pickle.load(handle)
     if not {"pipeline", "metadata"}.issubset(bundle):
         raise ValueError("Modelo incompatible.")
+    if json.loads(json.dumps(bundle["metadata"])) != metadata:
+        raise ValueError("Los metadatos no corresponden al modelo serializado.")
     return bundle
 
 

@@ -41,7 +41,7 @@ def holm_adjust(pvalues):
     return result
 
 
-def analyze_development(dev, features, folder="reports"):
+def analyze_development(dev, features, folder="reports", seed=42, repetitions=2000):
     """Paired early/late means use ONE difference per independent engine."""
     out = Path(folder)
     figs = out / "figures"
@@ -52,12 +52,16 @@ def analyze_development(dev, features, folder="reports"):
         for _, g in dev.groupby("engine_id"):
             diffs.append(float(g[sensor].tail(30).mean() - g[sensor].head(30).mean()))
         d = np.array(diffs)
-        test = stats.wilcoxon(d, alternative="two-sided", method="auto")
         nonzero = d[d != 0]
-        ranks = stats.rankdata(np.abs(nonzero))
-        effect = float(np.sum(np.sign(nonzero) * ranks) / ranks.sum())
-        rng = np.random.default_rng(42)
-        boot = rng.choice(d, size=(2000, len(d)), replace=True).mean(axis=1)
+        if len(nonzero):
+            test = stats.wilcoxon(d, alternative="two-sided", method="auto")
+            statistic, pvalue = float(test.statistic), float(test.pvalue)
+            ranks = stats.rankdata(np.abs(nonzero))
+            effect = float(np.sum(np.sign(nonzero) * ranks) / ranks.sum())
+        else:
+            statistic, pvalue, effect = 0.0, 1.0, 0.0
+        rng = np.random.default_rng(seed)
+        boot = rng.choice(d, size=(repetitions, len(d)), replace=True).mean(axis=1)
         lo, hi = np.quantile(boot, [0.025, 0.975])
         rows.append(
             {
@@ -68,8 +72,8 @@ def analyze_development(dev, features, folder="reports"):
                 "median_difference": float(np.median(d)),
                 "mean_ci95_lower": float(lo),
                 "mean_ci95_upper": float(hi),
-                "wilcoxon_W": float(test.statistic),
-                "p_raw": float(test.pvalue),
+                "wilcoxon_W": statistic,
+                "p_raw": pvalue,
                 "rank_biserial": effect,
             }
         )

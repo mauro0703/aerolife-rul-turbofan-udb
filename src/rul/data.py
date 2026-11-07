@@ -78,11 +78,17 @@ def extract_fd001(payload, destination):
         if len(nested) != 1:
             raise ValueError("El archivo no contiene CMAPSSData.zip ni FD001.")
         archive = zipfile.ZipFile(io.BytesIO(archive.read(nested[0])))
+    payloads = {}
     for filename in (*FILES, "readme.txt"):
         matches = [n for n in archive.namelist() if Path(n).name == filename]
         if len(matches) != 1:
             raise ValueError(f"Archivo ausente o ambiguo: {filename}")
-        (folder / filename).write_bytes(archive.read(matches[0]))
+        payloads[filename] = archive.read(matches[0])
+    # Validate every member before modifying the existing dataset.
+    for filename, contents in payloads.items():
+        temporary = folder / (filename + ".tmp")
+        temporary.write_bytes(contents)
+        temporary.replace(folder / filename)
     manifest = {
         "source_page": SOURCE_PAGE,
         "download_url": SOURCE_URL,
@@ -134,10 +140,13 @@ def validate_and_clean(frame):
         raise ValueError(
             "Esquema incorrecto: use engine_id, cycle, 3 settings y s1..s21."
         )
+    if frame.empty:
+        raise ValueError("El historial está vacío; incluya al menos un registro motor-ciclo.")
     clean = frame.copy(deep=True)
     for col in ["engine_id", "cycle"]:
         a = clean[col].to_numpy(dtype=float)
-        if not np.isfinite(a).all() or (a <= 0).any() or (a != np.floor(a)).any():
+        if (not np.isfinite(a).all() or (a <= 0).any()
+                or (a >= 2**63).any() or (a != np.floor(a)).any()):
             raise ValueError(f"{col} debe contener enteros positivos y finitos.")
         clean[col] = clean[col].astype(int)
     if clean.duplicated(["engine_id", "cycle"]).any():

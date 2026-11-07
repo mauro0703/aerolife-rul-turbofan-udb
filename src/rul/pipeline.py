@@ -30,6 +30,7 @@ from .evaluation import (
     inspection_policy,
 )
 from .analysis import analyze_development, result_figures
+from .artifacts import analytical_run
 
 
 def save_json(path, value):
@@ -49,8 +50,14 @@ def fit_weighted(pipeline, X, y, groups):
 
 
 def run_pipeline(config=None):
-    """Select with group CV; calibrate once; evaluate NASA labels once; save evidence."""
+    """Publish a complete, fingerprinted run; readers reject interrupted runs."""
     cfg = config or Config.load()
+    with analytical_run():
+        return _run_pipeline(cfg)
+
+
+def _run_pipeline(cfg):
+    """Select with group CV; calibrate once; evaluate NASA labels once; save evidence."""
     started = perf_counter()
     for directory in ("data/processed", "models", "reports/figures"):
         Path(directory).mkdir(parents=True, exist_ok=True)
@@ -60,6 +67,8 @@ def run_pipeline(config=None):
     X = make_features(labeled, cfg.windows)
     rng = np.random.default_rng(cfg.seed)
     all_ids = np.sort(labeled.engine_id.unique())
+    if len(all_ids) - cfg.calibration_engines < cfg.cv_folds:
+        raise ValueError("No quedan suficientes motores de desarrollo para GroupKFold.")
     calibration_ids = np.sort(
         rng.choice(all_ids, cfg.calibration_engines, replace=False)
     )
@@ -75,11 +84,13 @@ def run_pipeline(config=None):
     snapshots = choose_snapshots(labeled, cfg.seed + 1, cfg.min_history)
     dev_snapshots = np.intersect1d(snapshots, labeled.index[dev_mask])
     calibration_snapshots = np.intersect1d(snapshots, labeled.index[~dev_mask])
-    eda, hypotheses = analyze_development(dev, X_dev)
+    eda, hypotheses = analyze_development(
+        dev, X_dev, seed=cfg.seed, repetitions=cfg.bootstrap_repetitions
+    )
     splitter = GroupKFold(n_splits=cfg.cv_folds, shuffle=True, random_state=cfg.seed)
     folds = list(splitter.split(X_dev, y_dev, groups))
     choices = candidates(cfg)
-    records, fold_audit = [], []
+    records, fold_audit, oof = [], [], []
     for fold_no, (train_pos, val_pos) in enumerate(folds, 1):
         train_idx, val_idx = X_dev.index[train_pos], X_dev.index[val_pos]
         snapshot_idx = np.intersect1d(val_idx, dev_snapshots)
@@ -106,6 +117,11 @@ def run_pipeline(config=None):
                 groups.loc[train_idx],
             )
             prediction = predict_nonnegative(pipe, X.loc[snapshot_idx])
+            oof.extend({"candidate": name, "fold": fold_no,
+                        "engine_id": int(labeled.loc[i, "engine_id"]),
+                        "cycle": int(labeled.loc[i, "cycle"]),
+                        "rul_true": float(labeled.loc[i, "rul_true"]),
+                        "rul_pred": float(p)} for i, p in zip(snapshot_idx, prediction))
             metrics = regression_metrics(
                 labeled.loc[snapshot_idx, "rul_true"], prediction
             )
@@ -119,6 +135,7 @@ def run_pipeline(config=None):
             )
         print(f"CV fold {fold_no}/{cfg.cv_folds} completo", flush=True)
     cv = pd.DataFrame(records)
+    pd.DataFrame(oof).to_csv("reports/cv_predictions.csv", index=False)
     cv.to_csv("reports/cv_results.csv", index=False)
     comparison = (
         cv.groupby("candidate")
@@ -199,8 +216,9 @@ def run_pipeline(config=None):
     }
     bundle = {"pipeline": final, "metadata": metadata}
     # Freeze is persisted BEFORE official labels are read. Calibration is NEVER refitted.
-    with open("models/rul_predictor_model.pkl", "wb") as handle:
+    with open("models/rul_predictor_model.pkl.tmp", "wb") as handle:
         pickle.dump(bundle, handle, protocol=5)
+    Path("models/rul_predictor_model.pkl.tmp").replace("models/rul_predictor_model.pkl")
     save_json("models/model_metadata.json", metadata)
     model_hash_before = sha256("models/rul_predictor_model.pkl")
     test_raw, audit_test = validate_and_clean(read_raw("data/raw/test_FD001.txt"))
@@ -316,7 +334,7 @@ def run_pipeline(config=None):
         "calibration": {
             **regression_metrics(cal_true, cal_pred),
             "n_engines": len(cal_true),
-            "snapshot_protocol": "uniform eligible observed cycle >=30, one per engine, seed43",
+                "snapshot_protocol": f"uniform eligible observed cycle >={cfg.min_history}, one per engine, seed{cfg.seed + 1}",
         },
         "selected_model": winner,
         "cv_mean_rmse": float(comparison.iloc[0].cv_rmse),

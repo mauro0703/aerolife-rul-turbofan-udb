@@ -8,13 +8,13 @@ AEROLIFE estima los ciclos de vida útil remanente (RUL) a partir del historial 
 
 | Entregable | Acceso |
 | --- | --- |
-| Informe técnico | [Reporte_Tecnico_RUL_Turbofan.pdf](reports/Reporte_Tecnico_RUL_Turbofan.pdf) |
+| Informe técnico | [PDF](reports/Reporte_Tecnico_RUL_Turbofan.pdf) · [Word](reports/Reporte_Tecnico_RUL_Turbofan.docx) |
 | Cuaderno de análisis | [pipeline_analitico.ipynb](notebooks/pipeline_analitico.ipynb) |
-| Panel interactivo | [Abrir en el navegador](https://mauro0703.github.io/aerolife-panel-fd001/) · [Descargar ZIP](https://mauro0703.github.io/aerolife-panel-fd001/Panel_Interactivo_AEROLIFE.zip) |
+| Panel interactivo | [Abrir en el navegador](https://mauro0703.github.io/aerolife-panel-fd001/) · [Descargar ZIP](https://mauro0703.github.io/aerolife-panel-fd001/Panel_Interactivo_AEROLIFE.zip?v=5fd06ab4b5f3) |
 
 ## Panel interactivo
 
-![Vista de flota del panel AEROLIFE](dashboard/vista_previa.jpg)
+![Historial de un motor en el panel AEROLIFE](dashboard/vista_previa.jpg)
 
 El ZIP ocupa menos de 0,5 MB. Para consultar el panel sin instalación, extraer su contenido en una carpeta y abrir `index.html` en un navegador actualizado. Incluye la priorización de la flota, el historial de ocho canales por motor, la validación del modelo y la exportación de resultados a CSV. Los controles de horizonte, reserva e intervalo máximo de reevaluación permiten comparar escenarios de planificación. [Copia del ZIP en el repositorio](dashboard/Panel_Interactivo_AEROLIFE.zip).
 
@@ -32,6 +32,8 @@ El ZIP ocupa menos de 0,5 MB. Para consultar el panel sin instalación, extraer 
 Se usaron 80 motores para desarrollar el modelo y 20 para calibrar el intervalo conformal. La selección comparó ocho candidatos mediante cinco particiones agrupadas por motor. El imputador, el selector de varianza y el escalador se ajustaron dentro de la partición de entrenamiento de cada ajuste. Las variables de entrada se calcularon con el historial disponible hasta el ciclo consultado. El modelo seleccionado fue Random Forest con un mínimo de tres observaciones por hoja.
 
 FD001 simula un régimen de operación y una modalidad de degradación. La cobertura observada se interpreta junto con la anchura del intervalo. Los criterios del panel corresponden a escenarios de estudio y su aplicación en operación requiere validación con datos de servicio y procedimientos del fabricante.
+
+Con H=30 y B=10, la regla alerta a los 100 motores, de los cuales 25 tienen RUL real ≤30: 25 verdaderos positivos, 75 falsos positivos y ninguna omisión. Esta precisión del 25% y la especificidad nula muestran que la incertidumbre actual limita su aplicación para priorizar inspecciones. El proyecto no demuestra una reducción de AOG ni un ahorro monetario.
 
 ## Ejecución del sistema
 
@@ -52,7 +54,13 @@ python scripts/export_dashboard.py
 python -m pytest -q
 ```
 
-El cuaderno ejecutado ofrece una ruta independiente del experimento. Si se requiere recuperar los archivos originales, `python scripts/download_data.py` descarga FD001 desde la fuente registrada en la [ficha de procedencia](data/raw/README.md).
+Como alternativa a `run_pipeline.py`, `python scripts/execute_notebook.py` ejecuta todas las celdas y reproduce el mismo experimento con el intérprete del entorno activo. Ambas rutas entrenan de nuevo; no hace falta ejecutar las dos para consultar el sistema. Si se requiere recuperar los archivos originales, `python scripts/download_data.py` descarga FD001 desde la fuente registrada en la [ficha de procedencia](data/raw/README.md).
+
+En contenedores que restringen los sockets del kernel Jupyter se admite `python scripts/execute_notebook.py --in-process`: ejecuta todas las celdas en orden mediante IPython, incluido el entrenamiento, sin conexión de red local. La ejecución verificada del cuaderno utiliza esta modalidad.
+
+El entrenamiento admite un único proceso escritor. El [manifiesto analítico](models/artifact_manifest.json) registra el estado y los SHA-256; la aplicación y el exportador rechazan resultados incompletos o alterados. Después de entrenar, el caché del panel se renueva al cambiar los archivos. El pickle solo debe proceder de esta distribución de confianza.
+
+El panel web usa resultados precalculados y funciona sin instalar Python. Streamlit incorpora inferencia de historiales CSV nuevos. La sección de validación de ambas interfaces conserva los resultados de la prueba NASA original.
 
 ## Organización del repositorio
 
@@ -78,4 +86,4 @@ El cuaderno ejecutado ofrece una ruta independiente del experimento. Si se requi
 
 **Docente** · Eduardo Galicia
 
-[Referencias](reports/REFERENCIAS.md) · [Ficha del modelo](models/MODEL_CARD.md) · [Métricas del experimento](reports/metrics.json)
+[Referencias](reports/REFERENCIAS.md) · [Ficha del modelo](models/MODEL_CARD.md) · [Métricas del experimento](reports/metrics.json) · [Revisión técnica y verificación](reports/CONTROL_CALIDAD.md)

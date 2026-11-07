@@ -25,7 +25,12 @@ def regression_metrics(y_true, y_pred):
 
 
 def conformal_radius(y_true, y_pred, alpha=0.10):
-    residuals = np.sort(np.abs(np.asarray(y_true) - np.asarray(y_pred)))
+    truth, pred = np.asarray(y_true, dtype=float), np.asarray(y_pred, dtype=float)
+    if truth.ndim != 1 or truth.shape != pred.shape or not truth.size:
+        raise ValueError("Calibración requiere vectores no vacíos de igual longitud.")
+    if not np.isfinite(truth).all() or not np.isfinite(pred).all() or not 0 < alpha < 1:
+        raise ValueError("Valores de calibración finitos y 0 < alpha < 1 requeridos.")
+    residuals = np.sort(np.abs(truth - pred))
     n = len(residuals)
     rank = math.ceil((n + 1) * (1 - alpha))
     if rank > n:
@@ -49,6 +54,11 @@ def bootstrap_rmse(y_true, y_pred, seed=42, repetitions=2000):
 def inspection_policy(lower, horizon=30, buffer=10, max_interval=20):
     """Demonstration cycle budget; not an OEM maintenance instruction."""
     lower = np.asarray(lower, dtype=float)
+    if not np.isfinite(lower).all() or (lower < 0).any():
+        raise ValueError("El límite inferior debe ser finito y no negativo.")
+    parameters = np.asarray([horizon, buffer, max_interval], dtype=float)
+    if not np.isfinite(parameters).all() or horizon <= 0 or buffer < 0 or max_interval < 1:
+        raise ValueError("Horizonte positivo, reserva no negativa e intervalo máximo >= 1 requeridos.")
     budget = np.maximum(0, lower - buffer)
     status = np.where(
         lower <= buffer,

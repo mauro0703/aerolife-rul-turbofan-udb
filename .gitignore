@@ -5,3 +5,5 @@ __pycache__/
 *.pyc
 .tmp/
 .ruff_cache/
+models/.training.lock
+models/*.tmp

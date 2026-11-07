@@ -7,7 +7,10 @@ containers without local socket support. Both run all code, including training.
 import argparse
 import contextlib
 import io
+import json
 from pathlib import Path
+import sys
+import tempfile
 import nbformat
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -82,10 +85,29 @@ if args.in_process:
     )
 else:
     from nbclient import NotebookClient
+    from jupyter_client import AsyncKernelManager
+    from jupyter_client.kernelspec import KernelSpecManager
 
-    NotebookClient(
-        nb, timeout=3600, kernel_name="python3", resources={"metadata": {"path": "."}}
-    ).execute()
+    # A globally registered "python3" kernel can point outside the active venv.
+    # A temporary kernelspec binds the entire run to this exact interpreter.
+    with tempfile.TemporaryDirectory(prefix="aerolife-kernel-") as directory:
+        spec = Path(directory) / "aerolife"
+        spec.mkdir()
+        (spec / "kernel.json").write_text(json.dumps({
+            "argv": [sys.executable, "-m", "ipykernel_launcher", "-f", "{connection_file}"],
+            "display_name": "AEROLIFE active environment", "language": "python",
+        }), encoding="utf-8")
+
+        class ActiveEnvironmentKernel(AsyncKernelManager):
+            def __init__(self, **kwargs):
+                super().__init__(**kwargs)
+                self.kernel_spec_manager = KernelSpecManager(kernel_dirs=[directory])
+
+        NotebookClient(
+            nb, timeout=3600, kernel_name="aerolife",
+            kernel_manager_class=ActiveEnvironmentKernel,
+            resources={"metadata": {"path": "."}},
+        ).execute()
     nb.metadata["execution_mode"] = "nbclient Jupyter kernel; all code cells executed"
 nbformat.write(nb, nb_path)
 print("Notebook ejecutado sin celdas de error.", flush=True)

@@ -23,6 +23,7 @@ body { margin: 0; line-height: 1.5; }
 h1 { margin: 0; font-size: clamp(26px, 4vw, 40px); font-weight: 670; letter-spacing: -.045em; line-height: 1.15; }
 .subtitle, .muted { color: var(--muted); }
 .subtitle { margin: 10px 0 0; font-size: 14px; }
+#download-package { display: inline-block; margin-top: 12px; text-decoration: none; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin-bottom: 20px; overflow-x: auto; }
 .tabs button { border: 0; border-bottom: 3px solid transparent; background: transparent; color: var(--muted); font: inherit; font-weight: 650; padding: 10px 15px; white-space: nowrap; cursor: pointer; }
 .tabs button[aria-pressed="true"] { border-bottom-color: var(--blue); color: var(--blue); }

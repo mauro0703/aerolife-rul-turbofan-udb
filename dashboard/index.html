@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Resultados de estimación de vida útil remanente en motores turbofán NASA C-MAPSS FD001.">
   <title>AEROLIFE | Vida útil remanente del turbofán</title>
-  <link rel="stylesheet" href="panel.css">
-  <script src="datos.js" defer></script>
-  <script src="panel.js" defer></script>
+  <link rel="stylesheet" href="panel.css?v=518de1606a50">
+  <script src="datos.js?v=8766ef302299" defer></script>
+  <script src="panel.js?v=0398e0fec0d0" defer></script>
 </head>
 <body>
   <header class="masthead">
@@ -21,6 +21,7 @@
       <p class="eyebrow">Proyecto integrador aeronáutico</p>
       <h1 id="page-title">Vida útil remanente del turbofán</h1>
       <p class="subtitle">NASA C-MAPSS FD001 · Prueba oficial de 100 motores · Random Forest</p>
+      <a id="download-package" class="button" href="Panel_Interactivo_AEROLIFE.zip?v=5fd06ab4b5f3" download hidden>Descargar panel para uso sin conexión</a>
     </section>
     <p id="load-status" role="status">Cargando resultados de FD001…</p>
     <div id="dashboard" hidden>
@@ -62,6 +63,8 @@
       <section id="validation" class="page" aria-label="Validación" hidden>
         <div id="validation-cards" class="cards"></div>
         <p id="interval-note" class="notice"></p>
+        <p id="alert-note" class="notice" aria-live="polite"></p>
+        <p class="muted">Las métricas y la comparación de modelos corresponden a la prueba NASA original. Los controles solo cambian el escenario de priorización.</p>
         <div class="panel"><h2>Estimación frente a RUL de referencia</h2><div id="test-chart" class="chart"></div></div>
         <div class="panel"><h2>Comparación por validación cruzada</h2><div id="cv-table" class="table-wrap"></div></div>
       </section>
@@ -70,9 +73,13 @@
           <h2>Protocolo de evaluación</h2>
           <p>La selección del modelo empleó cinco particiones agrupadas por motor sobre 80 unidades. La calibración utilizó 20 motores reservados. La prueba oficial se realizó sobre 100 motores independientes, en su último ciclo observado.</p>
           <p>Las características combinan el ciclo, los sensores y ventanas de 5, 15 y 30 ciclos. La estimación utiliza las mediciones disponibles hasta el ciclo consultado. La evaluación principal usa la RUL de referencia completa.</p>
+          <p>Este panel consulta predicciones precalculadas de FD001. La aplicación Streamlit del repositorio permite calcular predicciones a partir de historiales CSV nuevos.</p>
+          <h2>Alcance de la incertidumbre</h2>
+          <p>El intervalo nominal del 90 % se calibró con un punto por cada motor reservado. Su validez marginal exige motores intercambiables y el mismo mecanismo de censura, condición que no se garantiza entre la pseudocensura interna y NASA. No asegura cobertura para cada motor ni para toda su trayectoria. La banda amplia produce numerosas alertas.</p>
           <h2>Regla de priorización</h2>
           <p>Sea L el límite inferior del intervalo, H el horizonte, B la reserva y M el máximo de reevaluación. Se asigna revisión prioritaria cuando L ≤ B, planificación cuando B &lt; L ≤ H + B, y seguimiento cuando L &gt; H + B.</p>
           <p>El número de ciclos hasta reevaluar es la parte entera de min(M, max(0, L − B)). La regla se aplica a una flota simulada para comparar escenarios de planificación.</p>
+          <p>La salida apoya el análisis académico de prioridades. No autoriza un plazo de operación ni sustituye el programa de mantenimiento aprobado. No se han medido reducciones de AOG ni ahorros reales.</p>
           <p><a href="https://data.nasa.gov/dataset/cmapss-jet-engine-simulated-data">Datos C-MAPSS · NASA Open Data</a></p>
         </div>
       </section>
